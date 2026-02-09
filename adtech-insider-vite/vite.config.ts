@@ -4,6 +4,8 @@ import { fileURLToPath, URL } from "url";
 
 export default defineConfig({
   plugins: [react()],
+  server: { port: 3000 },   // לפיתוח
+  preview: { port: 3001 },  // לפריוויו אם צריך
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
