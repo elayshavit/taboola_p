@@ -31,4 +31,4 @@ Open [http://localhost:3000](http://localhost:3000). The app redirects to `/comp
 - `data/` – mock 2025 quarterly data
 - `lib/` – cn helper, theme provider
 - `store/` – Zustand company store
-- `types/` – strict TypeScript types
+- `types/` – strict TypeScript types 
