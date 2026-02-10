@@ -1,0 +1,149 @@
+{
+  "projectRoot": "c:\\Users\\inbal\\PyCharmMiscProject\\New folder",
+  "apps": {
+    "adtech-insider": {
+      "type": "Next.js",
+      "port": 3000,
+      "path": "adtech-insider",
+      "keyFiles": {
+        "app/page.tsx": {
+          "purpose": "Home - redirects to /company/taboola",
+          "content": "import { redirect } from 'next/navigation';\nexport default function HomePage() {\n  redirect('/company/taboola');\n}"
+        },
+        "app/company/[slug]/page.tsx": {
+          "purpose": "Dynamic route for /company/taboola, /company/teads, etc.",
+          "content": "import { CompanyPageClient } from '@/components/company/company-page-client';\nexport default function CompanyPage() {\n  return <CompanyPageClient />;\n}"
+        },
+        "app/company/[slug]/loading.tsx": {
+          "purpose": "Loading skeleton for company page"
+        },
+        "app/compare/page.tsx": {
+          "purpose": "Compare page"
+        },
+        "app/layout.tsx": {
+          "purpose": "Root layout with ThemeProvider, AppShell"
+        },
+        "components/company/company-page-client.tsx": {
+          "purpose": "Client component - Taboola dashboard (HeroHeader, KpiGrid, QuarterTimeline, BubbleChart)",
+          "dependencies": ["useCompaniesStore", "canonicalToCompanyData", "HeroHeader", "KpiGrid", "QuarterTimeline", "BubbleChart"]
+        },
+        "components/dashboard/hero-header.tsx": {
+          "purpose": "Company hero with logo and KPIs"
+        },
+        "components/dashboard/kpi-grid.tsx": {
+          "purpose": "KPI cards grid"
+        },
+        "components/dashboard/quarter-timeline.tsx": {
+          "purpose": "Quarterly timeline"
+        },
+        "components/dashboard/bubble-chart.tsx": {
+          "purpose": "Bubble chart"
+        },
+        "components/layout/sidebar.tsx": {
+          "purpose": "Sidebar nav - AdTech Insider logo links to /company/taboola"
+        },
+        "store/use-companies-store.ts": {
+          "purpose": "Zustand store - companies data, hydrate from localStorage",
+          "excludedIds": ["outbrain", "criteo"]
+        },
+        "data/data.ts": {
+          "purpose": "Raw company data (Taboola, Teads, The Trade Desk, Simpli.fi)"
+        },
+        "lib/adapter.ts": {
+          "purpose": "canonicalToCompanyData - converts canonical to CompanyData"
+        }
+      },
+      "routes": {
+        "/": "redirect 307 -> /company/taboola",
+        "/company/[slug]": "CompanyPageClient (Taboola, Teads, etc.)",
+        "/compare": "Compare Studio"
+      }
+    },
+    "adtech-insider-vite": {
+      "type": "Vite + React",
+      "port": 3000,
+      "previewPort": 3001,
+      "path": "adtech-insider-vite",
+      "config": "vite.config.ts",
+      "keyFiles": {
+        "src/App.tsx": {
+          "purpose": "Main app - Layout, Routes (/company/:id, /compare)",
+          "logoLink": "/company/taboola"
+        },
+        "src/main.tsx": {
+          "purpose": "Entry point"
+        },
+        "src/components/CompanyDashboard.tsx": {
+          "purpose": "Company dashboard view"
+        },
+        "src/components/CompareView.tsx": {
+          "purpose": "Compare view"
+        },
+        "src/components/AddCompanyDialog.tsx": {
+          "purpose": "Add company via JSON"
+        },
+        "src/components/CompanyLogo.tsx": {
+          "purpose": "Company logo - Criteo uses /logos/criteo.png when id=criteo"
+        },
+        "src/store/useCompaniesStore.ts": {
+          "purpose": "Zustand store, excluded: outbrain, criteo"
+        },
+        "src/data/companies.ts": {
+          "purpose": "Seed companies (Taboola, Teads, The Trade Desk, Simpli.fi)"
+        },
+        "vite.config.ts": {
+          "content": "server: { port: 3000 }, preview: { port: 3001 }"
+        }
+      },
+      "routes": {
+        "/": "Home -> first company dashboard",
+        "/company/:id": "CompanyDashboard",
+        "/compare": "CompareView"
+      }
+    }
+  },
+  "fileTree": {
+    "adtech-insider": [
+      "app/page.tsx",
+      "app/layout.tsx",
+      "app/company/[slug]/page.tsx",
+      "app/company/[slug]/loading.tsx",
+      "app/compare/page.tsx",
+      "app/globals.css",
+      "components/company/company-page-client.tsx",
+      "components/dashboard/hero-header.tsx",
+      "components/dashboard/kpi-grid.tsx",
+      "components/dashboard/quarter-timeline.tsx",
+      "components/dashboard/bubble-chart.tsx",
+      "components/layout/sidebar.tsx",
+      "components/layout/app-shell.tsx",
+      "store/use-companies-store.ts",
+      "store/use-company-store.ts",
+      "store/use-compare-store.ts",
+      "data/data.ts",
+      "data/companiesMetrics.ts",
+      "lib/adapter.ts",
+      "lib/schema.ts",
+      "lib/normalize.ts",
+      "config/brand.ts",
+      "config/site.ts",
+      "types/index.ts"
+    ],
+    "adtech-insider-vite": [
+      "src/App.tsx",
+      "src/main.tsx",
+      "src/components/CompanyDashboard.tsx",
+      "src/components/CompareView.tsx",
+      "src/components/AddCompanyDialog.tsx",
+      "src/components/CompanyLogo.tsx",
+      "src/components/ManageCompaniesDialog.tsx",
+      "src/store/useCompaniesStore.ts",
+      "src/data/companies.ts",
+      "src/lib/parseCompanyJson.ts",
+      "src/lib/computeCompany.ts",
+      "src/types/company.ts",
+      "vite.config.ts",
+      "index.html"
+    ]
+  }
+}

@@ -55,8 +55,7 @@ function ComparePageContent() {
   }, [hydrate]);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoaded(true), 400 + Math.random() * 300);
-    return () => clearTimeout(t);
+    setLoaded(true);
   }, []);
 
   const companiesData = useMemo(() => {

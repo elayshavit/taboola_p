@@ -1,5 +1,6 @@
 import type { CanonicalCompanyData } from "@/lib/schema";
 import type { CompanyData } from "@/types";
+import { isValidLogoUrl } from "@/lib/analyze-adapter";
 
 const QUARTER_DISPLAY: Record<string, string> = {
   Q1: "Q1 2025",
@@ -14,9 +15,12 @@ const QUARTER_DISPLAY: Record<string, string> = {
 export function canonicalToCompanyData(
   c: CanonicalCompanyData
 ): CompanyData {
+  const logoUrl = isValidLogoUrl(c.logo);
+
   return {
     id: c.slug,
     name: c.companyName,
+    logoUrl,
     tagline: c.tagline,
     overview: c.overview,
     strategy_2025_summary: c.strategy2025,

@@ -26,5 +26,6 @@ export function createMockCompany(seed: number): InputCompany {
       perception_score: Math.round(60 + r(i * 10 + 1) * 35),
       key_activities: ["Activity 1", "Activity 2", "Activity 3"],
     })),
+    logo: undefined,
   };
 }

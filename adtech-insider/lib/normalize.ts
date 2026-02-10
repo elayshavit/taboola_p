@@ -1,7 +1,9 @@
 import type { InputCompany, InputQuarterlyData } from "@/lib/schema";
 import type { CanonicalCompanyData, CanonicalQuarterlyData } from "@/lib/schema";
-import { parseInputJson, parseCanonicalCompanies } from "@/lib/schema";
+import { parseInputJsonWithFallback, parseCanonicalCompanies } from "@/lib/schema";
 import { mapToBrandPerception } from "@/lib/brand";
+import { isValidLogoUrl } from "@/lib/analyze-adapter";
+import { sanitizeRawCompanies } from "@/lib/company-sanitizer";
 
 const QUARTERS: readonly ["Q1", "Q2", "Q3", "Q4"] = ["Q1", "Q2", "Q3", "Q4"];
 
@@ -69,17 +71,35 @@ function normalizeCompany(input: InputCompany): CanonicalCompanyData {
     offerings: Array.isArray(input.offerings) ? input.offerings : [],
     strategy2025: input.strategy_2025_summary ?? "",
     quarterlyData,
+    logo: isValidLogoUrl(input.logo) ?? undefined,
   };
+}
+
+function extractCompaniesArrayForParse(input: unknown): unknown[] {
+  if (Array.isArray(input)) return input;
+  if (input && typeof input === "object" && "companies" in input) {
+    const arr = (input as { companies?: unknown }).companies;
+    return Array.isArray(arr) ? arr : [];
+  }
+  if (input && typeof input === "object" && "name" in input) return [input];
+  return [];
 }
 
 /**
  * Normalize input JSON to canonical company data.
- * All companies get 4 quarters with valid arrays and metrics.
+ * Uses per-item fallback: when full validation fails, keeps valid items and drops invalid.
+ * Sanitizes raw arrays before validation to coerce malformed fields.
  */
 export function normalizeCompanies(inputJson: unknown): CanonicalCompanyData[] {
-  const parsed = parseInputJson(inputJson);
+  const start = Date.now();
+  const rawArr = extractCompaniesArrayForParse(inputJson);
+  const sanitized = rawArr.length > 0 ? sanitizeRawCompanies(rawArr) : [];
+  const toParse = sanitized.length > 0 ? sanitized : inputJson;
+
+  const parsed = parseInputJsonWithFallback(toParse);
   if (!parsed.success) {
     if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
       console.error("[normalize] Input validation failed:", parsed.error);
     }
     return [];
@@ -89,9 +109,16 @@ export function normalizeCompanies(inputJson: unknown): CanonicalCompanyData[] {
   const validated = parseCanonicalCompanies(canonical);
   if (!validated.success) {
     if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
       console.error("[normalize] Canonical validation failed:", validated.error);
     }
-    return canonical; // Return anyway; Zod transform may have altered
+    return canonical;
+  }
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.log(
+      `[perf] normalize ${canonical.length} companies in ${Date.now() - start}ms`
+    );
   }
   return validated.data;
 }

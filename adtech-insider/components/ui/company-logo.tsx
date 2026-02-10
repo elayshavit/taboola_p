@@ -22,6 +22,8 @@ interface CompanyLogoProps {
   size?: LogoSize | number;
   variant?: LogoVariant;
   className?: string;
+  /** Optional custom logo URL (e.g. Clearbit) - overrides built-in brand logo */
+  logoSrc?: string;
 }
 
 function MonogramFallback({
@@ -61,13 +63,15 @@ export function CompanyLogo({
   size = "md",
   variant = "avatar",
   className,
+  logoSrc: customLogoSrc,
 }: CompanyLogoProps) {
   const brand = getCompanyBrand(slug);
+  const logoSrc = customLogoSrc ?? brand.logoSrc;
   const px = typeof size === "number" ? size : sizeMap[size];
   const [hasError, setHasError] = React.useState(false);
 
   const useMonogram =
-    hasError || brand.markMode === "monogram" || !brand.logoSrc;
+    hasError || brand.markMode === "monogram" || !logoSrc;
 
   const containerClass = cn(
     "shrink-0 overflow-hidden flex items-center justify-center",
@@ -102,14 +106,14 @@ export function CompanyLogo({
       }}
     >
       <Image
-        src={brand.logoSrc}
+        src={logoSrc}
         alt={brand.logoAlt}
         width={innerSize}
         height={innerSize}
         className="object-contain"
         style={{ width: innerSize, height: innerSize }}
         onError={() => setHasError(true)}
-        unoptimized={brand.logoSrc.endsWith(".svg")}
+        unoptimized={logoSrc.endsWith(".svg")}
       />
     </div>
   );

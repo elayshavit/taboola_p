@@ -16,13 +16,22 @@ interface KpiGridProps {
 }
 
 function computeKpis(company: CompanyData) {
-  const q = company.quarterly_data;
+  const q = company.quarterly_data ?? [];
+  if (q.length === 0) {
+    return {
+      avgPerception: 0,
+      avgIntensity: 0,
+      totalActivities: 0,
+      perceptionTrend: [] as number[],
+      intensityTrend: [] as number[],
+    };
+  }
   const avgPerception =
     q.reduce((sum, d) => sum + d.perception_score, 0) / q.length;
   const avgIntensity =
     q.reduce((sum, d) => sum + d.marketing_intensity_score, 0) / q.length;
   const totalActivities = q.reduce(
-    (sum, d) => sum + d.key_activities.length,
+    (sum, d) => sum + (d.key_activities?.length ?? 0),
     0
   );
   const perceptionTrend = q.map((d) => d.perception_score);

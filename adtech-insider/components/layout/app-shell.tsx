@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "./sidebar";
 import { RouteTransition } from "./route-transition";
+import { Topbar } from "./topbar";
 import { CommandCenter } from "@/components/command/command-center";
 import { useCompaniesStore } from "@/store/use-companies-store";
 
@@ -18,6 +19,7 @@ export function AppShell({ children }: AppShellProps) {
     try {
       hydrate();
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.warn("[AppShell] Hydrate failed:", e);
     }
   }, [hydrate]);
@@ -26,7 +28,8 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen flex">
       <Sidebar onCommandOpen={() => setCommandOpen(true)} />
       <CommandCenter open={commandOpen} onOpenChange={setCommandOpen} />
-      <main className="flex-1 flex flex-col min-w-0 md:pl-0 pt-16 md:pt-0 md:pl-0 relative overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
+        <Topbar />
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.4] dark:opacity-[0.15]"
           style={{

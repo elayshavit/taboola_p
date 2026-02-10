@@ -96,14 +96,15 @@ export const BubbleChart = memo(function BubbleChart({ company }: BubbleChartPro
   const uniqueId = useId().replace(/:/g, "-");
 
   const data: ChartPoint[] = useMemo(() => {
-    return company.quarterly_data.map((q, i) => ({
+    const qData = company.quarterly_data ?? [];
+    return qData.map((q, i) => ({
       quarter: q.quarter,
       quarterIndex: i,
       perceptionScore: q.perception_score,
       brandLabel: q.brand_perception,
       marketingIntensity: q.marketing_intensity_score,
-      activitiesCount: q.key_activities.length,
-      topHighlights: q.key_activities.slice(0, 3),
+      activitiesCount: q.key_activities?.length ?? 0,
+      topHighlights: (q.key_activities ?? []).slice(0, 3),
     }));
   }, [company]);
 

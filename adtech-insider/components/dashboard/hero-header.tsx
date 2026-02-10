@@ -16,6 +16,8 @@ import type { CompanyData, CompanySlug } from "@/types";
 
 interface HeroHeaderProps {
   company: CompanyData;
+  /** Optional custom logo URL (e.g. Clearbit) for AI-analyzed companies */
+  logoSrc?: string;
 }
 
 function computeKpis(company: CompanyData) {
@@ -27,13 +29,16 @@ function computeKpis(company: CompanyData) {
       activities: m.activity,
     };
   }
-  const q = company.quarterly_data;
+  const q = company.quarterly_data ?? [];
+  if (q.length === 0) {
+    return { perception: 0, intensity: 0, activities: 0 };
+  }
   const avgPerception =
     q.reduce((sum, d) => sum + d.perception_score, 0) / q.length;
   const avgIntensity =
     q.reduce((sum, d) => sum + d.marketing_intensity_score, 0) / q.length;
   const totalActivities = q.reduce(
-    (sum, d) => sum + d.key_activities.length,
+    (sum, d) => sum + (d.key_activities?.length ?? 0),
     0
   );
   return {
@@ -66,9 +71,19 @@ const KpiChip = memo(function KpiChip({
   );
 });
 
-export const HeroHeader = memo(function HeroHeader({ company }: HeroHeaderProps) {
+export const HeroHeader = memo(function HeroHeader({ company, logoSrc }: HeroHeaderProps) {
   const brand = getCompanyBrand(company.id as CompanySlug);
   const kpis = computeKpis(company);
+
+  const isCoreBrand =
+    company.id === "taboola" ||
+    company.id === "teads" ||
+    company.id === "the-trade-desk" ||
+    company.id === "simpli-fi";
+
+  // For core brands, always render the design-system logo.
+  // For dynamic companies, only render a logo when we have a validated remote logo URL.
+  const shouldRenderLogo = isCoreBrand || (!!logoSrc && typeof logoSrc === "string");
 
   return (
     <motion.section
@@ -115,12 +130,15 @@ export const HeroHeader = memo(function HeroHeader({ company }: HeroHeaderProps)
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
               >
-                <CompanyLogo
-                  slug={company.id}
-                  name={company.name}
-                  size="hero"
-                  variant="badge"
-                />
+                {shouldRenderLogo && (
+                  <CompanyLogo
+                    slug={company.id}
+                    name={company.name}
+                    size="hero"
+                    variant="badge"
+                    logoSrc={logoSrc}
+                  />
+                )}
               </motion.div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight md:text-3xl">

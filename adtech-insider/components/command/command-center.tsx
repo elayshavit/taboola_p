@@ -30,10 +30,17 @@ interface DeepResult {
   keywords: string[];
 }
 
-function buildDeepResults(companiesApp: { id: string; name: string; quarterly_data: { quarter: string; main_theme: string; brand_perception: string; key_activities: string[] }[] }[]): DeepResult[] {
+function buildDeepResults(
+  companiesApp: {
+    id: string;
+    name: string;
+    quarterly_data?: { quarter: string; main_theme: string; brand_perception: string; key_activities?: string[] }[];
+  }[]
+): DeepResult[] {
   const results: DeepResult[] = [];
   for (const c of companiesApp) {
-    for (const q of c.quarterly_data) {
+    const qData = c.quarterly_data ?? [];
+    for (const q of qData) {
       results.push({
         type: "theme",
         company: c.name,
@@ -42,7 +49,7 @@ function buildDeepResults(companiesApp: { id: string; name: string; quarterly_da
         text: q.main_theme,
         keywords: [q.main_theme, q.brand_perception, c.name],
       });
-      for (const act of q.key_activities.slice(0, 2)) {
+      for (const act of (q.key_activities ?? []).slice(0, 2)) {
         const short = act.slice(0, 80);
         results.push({
           type: "activity",
@@ -140,6 +147,18 @@ export function CommandCenter({ open, onOpenChange }: CommandCenterProps) {
         </CommandGroup>
 
         <CommandGroup heading="Pages">
+          <CommandItem
+            value="analyze any company"
+            keywords={["analyze", "analysis", "ai", "company"]}
+            onSelect={() => handleSelect("/")}
+            className="flex items-center gap-3 rounded-lg px-3 py-2"
+          >
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+            <span>Analyze any company</span>
+            <kbd className="hidden sm:inline-flex ml-auto h-5 items-center rounded border border-border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
+              ↵
+            </kbd>
+          </CommandItem>
           <CommandItem
             value="compare all comparison"
             keywords={["compare", "comparison"]}

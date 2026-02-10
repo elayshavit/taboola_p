@@ -24,7 +24,7 @@ function QuarterCard({
   onToggle: () => void;
   accentColor: string;
 }) {
-  const activityCount = data.key_activities.length;
+  const activityCount = data.key_activities?.length ?? 0;
 
   return (
     <motion.div
@@ -105,7 +105,7 @@ function QuarterCard({
                 Key Activities
               </h4>
               <ul className="space-y-3">
-                {data.key_activities.map((activity, idx) => (
+                {(data.key_activities ?? []).map((activity, idx) => (
                   <motion.li
                     key={idx}
                     initial={{ opacity: 0, x: -8 }}
@@ -129,10 +129,19 @@ function QuarterCard({
 export const QuarterTimeline = memo(function QuarterTimeline({
   company,
 }: QuarterTimelineProps) {
+  const quarterlyData = company.quarterly_data ?? [];
   const brand = getCompanyBrand(company.id as CompanySlug);
   const [expandedQuarter, setExpandedQuarter] = useState<string | null>(
-    company.quarterly_data[0]?.quarter ?? null
+    quarterlyData[0]?.quarter ?? null
   );
+
+  if (quarterlyData.length === 0) {
+    return (
+      <div className="rounded-xl glass-card p-6 text-center text-muted-foreground">
+        No quarterly data available.
+      </div>
+    );
+  }
 
   return (
     <motion.section
@@ -155,7 +164,7 @@ export const QuarterTimeline = memo(function QuarterTimeline({
         />
 
         <div className="space-y-2 relative">
-          {company.quarterly_data.map((q, idx) => (
+          {quarterlyData.map((q) => (
             <QuarterCard
               key={q.quarter}
               data={q}

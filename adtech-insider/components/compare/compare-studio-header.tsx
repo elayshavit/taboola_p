@@ -130,6 +130,7 @@ export function CompareStudioHeader() {
   const companyList = Array.isArray(companies) ? companies : [];
   const allSlugs = companyList.map((c) => c.slug);
   const companyLabels = Object.fromEntries(companyList.map((c) => [c.slug, c.companyName]));
+  const removeCompany = useCompaniesStore((s) => s.removeCompany);
 
   useEffect(() => {
     useCompareStore.getState().loadSavedViews();
@@ -266,18 +267,45 @@ export function CompareStudioHeader() {
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent align="start" className="w-64">
               <DropdownMenuLabel>
-                Select 2–4
+                Select 2–4 · Remove to delete from list
               </DropdownMenuLabel>
               {allSlugs.map((slug) => (
-                <DropdownMenuCheckboxItem
+                <div
                   key={slug}
-                  checked={store.selectedCompanies.includes(slug)}
-                  onCheckedChange={() => toggleCompany(slug)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent/50 group"
                 >
-                  {companyLabels[slug] ?? slug}
-                </DropdownMenuCheckboxItem>
+                  <Checkbox
+                    checked={store.selectedCompanies.includes(slug)}
+                    onCheckedChange={() => toggleCompany(slug)}
+                  />
+                  <span className="flex-1 truncate text-sm">
+                    {companyLabels[slug] ?? slug}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      const wasRemoved = removeCompany(slug);
+                      if (wasRemoved) {
+                        const updatedCompanies = useCompaniesStore.getState().companies;
+                        const updatedSlugs = updatedCompanies.map((c) => c.slug);
+                        const nextSelected = store.selectedCompanies.filter(
+                          (s) => s !== slug && updatedSlugs.includes(s)
+                        );
+                        store.setSelectedCompanies(
+                          nextSelected.length >= 2 ? nextSelected : updatedSlugs.slice(0, 4)
+                        );
+                        toast.success(`${companyLabels[slug] ?? slug} removed`);
+                      }
+                    }}
+                    aria-label={`Remove ${companyLabels[slug] ?? slug}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>

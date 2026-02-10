@@ -5,7 +5,7 @@ import type { CanonicalCompanyData } from "@/lib/schema";
 import { runCompareSanityChecks } from "@/lib/compare.sanity";
 
 /** Raw input JSON - matches external schema (id, name, quarterly_data with quarter, main_theme, etc.) */
-const rawCompaniesJson = [
+export const rawCompaniesJson = [
   {
     id: "taboola",
     name: "Taboola",
@@ -121,9 +121,7 @@ export function getCompany(slug: CompanySlug): Promise<CompanyData> {
   if (!data) {
     return Promise.reject(new Error(`Company not found: ${slug}`));
   }
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(data), 700 + Math.random() * 200);
-  });
+  return Promise.resolve(data);
 }
 
 export function getCompanySync(slug: CompanySlug): CompanyData | undefined {

@@ -46,6 +46,7 @@ export const InputCompanySchema = z.object({
   offerings: z.array(z.string()).optional(),
   quarterly_data: z.array(InputQuarterlyDataSchema).optional(),
   quarters: z.array(z.any()).optional(),
+  logo: z.union([z.string(), z.null()]).optional(),
 }).transform((raw) => {
   const qData = raw.quarterly_data ?? raw.quarters ?? [];
   const mapped = Array.isArray(qData) ? qData.map((q: unknown) =>
@@ -65,6 +66,7 @@ export const InputCompanySchema = z.object({
     strategy_2025_summary: raw.strategy_2025_summary ?? raw.strategy2025Summary ?? "",
     offerings: raw.offerings ?? [],
     quarterly_data: filled.slice(0, 4),
+    logo: raw.logo ?? undefined,
   };
 });
 
@@ -75,7 +77,6 @@ export const InputJsonSchema = z.union([
   InputCompanySchema.transform((c) => [c]),
 ]);
 
-export type InputQuarterlyData = z.infer<typeof InputQuarterlyDataSchema>;
 export type InputCompany = z.infer<typeof InputCompanySchema>;
 
 // =============================================================================
@@ -144,6 +145,79 @@ export function parseInputJson(
     success: false,
     error: `Input JSON validation failed: ${issues}`,
   };
+}
+
+/**
+ * Extract array of companies from unknown input.
+ * Handles { companies: [...] }, direct array, or single company.
+ */
+function extractCompaniesArray(input: unknown): unknown[] {
+  if (Array.isArray(input)) return input;
+  if (input && typeof input === "object" && "companies" in input) {
+    const arr = (input as { companies?: unknown }).companies;
+    return Array.isArray(arr) ? arr : [];
+  }
+  if (input && typeof input === "object" && "name" in input) {
+    return [input];
+  }
+  return [];
+}
+
+/**
+ * Parse input with per-item fallback: when full schema fails,
+ * validate each item individually and return valid ones.
+ */
+export function parseInputJsonWithFallback(
+  data: unknown
+): { success: true; data: InputCompany[]; partial: boolean } | { success: false; error: string } {
+  const fullResult = InputJsonSchema.safeParse(data);
+  if (fullResult.success) {
+    return { success: true, data: fullResult.data, partial: false };
+  }
+
+  const issues = fullResult.error.issues.map((i) => ({
+    path: i.path.join("."),
+    message: i.message,
+    code: i.code,
+  }));
+
+  if (process.env.NODE_ENV === "development") {
+    const arr = extractCompaniesArray(data);
+    // eslint-disable-next-line no-console
+    console.error("[normalize] Input validation failed", {
+      count: Array.isArray(data) ? data.length : "non-array",
+      issues,
+      sample: arr.slice(0, 2),
+    });
+  }
+
+  const arr = extractCompaniesArray(data);
+  const safeItems: InputCompany[] = [];
+
+  for (let idx = 0; idx < arr.length; idx++) {
+    const item = arr[idx];
+    const single = InputCompanySchema.safeParse(item);
+    if (single.success) {
+      safeItems.push(single.data);
+    } else if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.warn("[normalize] Dropping invalid company at index", idx, {
+        issues: single.error.issues.map((i) => ({
+          path: i.path.join("."),
+          message: i.message,
+        })),
+        name: item && typeof item === "object" && "name" in item ? (item as { name?: unknown }).name : "(unknown)",
+        slug: item && typeof item === "object" && "slug" in item ? (item as { slug?: unknown }).slug : "(unknown)",
+      });
+    }
+  }
+
+  if (safeItems.length > 0) {
+    return { success: true, data: safeItems, partial: true };
+  }
+
+  const msg = issues.map((i) => `${i.path}: ${i.message}`).join("; ");
+  return { success: false, error: `Input JSON validation failed: ${msg}` };
 }
 
 export function parseCanonicalCompanies(
